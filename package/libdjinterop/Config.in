@@ -1,0 +1,13 @@
+config BR2_PACKAGE_LIBDJINTEROP
+	bool "libdjinterop"
+	depends on BR2_INSTALL_LIBSTDCPP # C++20
+	depends on BR2_TOOLCHAIN_GCC_AT_LEAST_10 # C++20
+	select BR2_PACKAGE_ZLIB
+	select BR2_PACKAGE_SQLITE
+	help
+	  C++ library providing access to DJ record libraries.
+
+	  https://github.com/xsco/libdjinterop
+
+comment "libdjinterop needs a toolchain w/ C++, gcc >= 10"
+	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_TOOLCHAIN_GCC_AT_LEAST_10

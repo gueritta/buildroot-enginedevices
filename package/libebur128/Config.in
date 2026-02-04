@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBEBUR128
+	bool "libebur128"
+	help
+	  libebur128 is a library that implements the EBU R 128
+	  standard for loudness normalization.
+
+	  https://github.com/jiixyj/libebur128
