@@ -5,7 +5,10 @@ MIXXX_INSTALL_STAGING = NO
 MIXXX_INSTALL_TARGET = YES
 MIXXX_LICENSE = GPLv2
 # disable symlinks to avoid "failed to create symbolic link '…/src/test' because existing path cannot be removed: Is a directory"
-MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF
+MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF -DQT_QPA_PLATFORM=eglfs -DOPTIMIZE=off
+
+MIXXX_CFLAGS += -march=armv8-a
+MIXXX_CXXFLAGS += -march=armv8-a
 # MIXXX_DEPENDENCIES = \
 # 	protobuf vamp-plugin-sdk rubberband soundtouch \
 # 	libid3tag taglib \
