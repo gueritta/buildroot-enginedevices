@@ -1,8 +1,12 @@
+################################################################################
+#
+# RUBBERBAND
+#
+################################################################################
+
 RUBBERBAND_VERSION = 4.0.0
-RUBBERBAND_SOURCE = rubberband-$(RUBBERBAND_VERSION).tar.gz
 RUBBERBAND_SITE = $(call github,breakfastquay,rubberband,v$(RUBBERBAND_VERSION))
 RUBBERBAND_INSTALL_STAGING = YES
-RUBBERBAND_INSTALL_TARGET = YES
 RUBBERBAND_LICENSE = GPLv2
 
 ifeq ($(BR2_PACKAGE_FFTW_DOUBLE),y)

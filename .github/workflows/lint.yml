@@ -1,0 +1,34 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, mixxx ]
+  pull_request:
+    branches: [ main, mixxx ]
+
+jobs:
+  check-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout Buildroot (for utils)
+        uses: actions/checkout@v4
+        with:
+          repository: buildroot/buildroot
+          path: buildroot
+          sparse-checkout: |
+            utils
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-magic flake8
+
+      - name: Run check-package
+        run: |
+          # We exclude the buildroot directory itself and only check our files
+          # We use -b/--br2-external because we are in an external tree
+          # We currently exclude .patch files to avoid failures from third-party patches
+          find . -maxdepth 4 -path ./buildroot -prune -o \( -name "Config.in" -o -name "*.mk" \) -print | xargs ./buildroot/utils/check-package -b
