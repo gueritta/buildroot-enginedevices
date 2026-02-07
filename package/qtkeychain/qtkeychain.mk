@@ -1,8 +1,13 @@
+################################################################################
+#
+# QTKEYCHAIN
+#
+################################################################################
+
 QTKEYCHAIN_VERSION = 0.15.0
 QTKEYCHAIN_SOURCE = qtkeychain-$(QTKEYCHAIN_VERSION).tar.gz
 QTKEYCHAIN_SITE = $(call github,frankosterfeld,qtkeychain,v$(QTKEYCHAIN_VERSION))
 QTKEYCHAIN_INSTALL_STAGING = YES
-QTKEYCHAIN_INSTALL_TARGET = YES
 QTKEYCHAIN_LICENSE = ModifiedBSD
 QTKEYCHAIN_DEPENDENCIES = libsecret qt5base qt5tools
 

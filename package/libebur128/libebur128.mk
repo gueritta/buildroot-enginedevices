@@ -1,3 +1,9 @@
+################################################################################
+#
+# LIBEBUR128
+#
+################################################################################
+
 LIBEBUR128_VERSION = 1.2.6
 LIBEBUR128_SOURCE = libebur128-$(LIBEBUR128_VERSION).tar.gz
 LIBEBUR128_SITE = $(call github,jiixyj,libebur128,v$(LIBEBUR128_VERSION))

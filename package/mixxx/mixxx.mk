@@ -1,8 +1,12 @@
+################################################################################
+#
+# MIXXX
+#
+################################################################################
+
 MIXXX_VERSION = 2.5.4
 MIXXX_SOURCE = mixxx-$(MIXXX_VERSION).tar.gz
 MIXXX_SITE = $(call github,mixxxdj,mixxx,$(MIXXX_VERSION))
-MIXXX_INSTALL_STAGING = NO
-MIXXX_INSTALL_TARGET = YES
 MIXXX_LICENSE = GPLv2
 # disable symlinks to avoid "failed to create symbolic link '…/src/test' because existing path cannot be removed: Is a directory"
 MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF -DQT_QPA_PLATFORM=eglfs -DOPTIMIZE=off
