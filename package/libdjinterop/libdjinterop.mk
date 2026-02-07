@@ -1,10 +1,5 @@
-################################################################################
-#
-# LIBDJINTEROP
-#
-################################################################################
-
 LIBDJINTEROP_VERSION = 0.24.3
+LIBDJINTEROP_SOURCE = libdjinterop-$(LIBDJINTEROP_VERSION).tar.gz
 LIBDJINTEROP_SITE = $(call github,xsco,libdjinterop,$(LIBDJINTEROP_VERSION))
 LIBDJINTEROP_INSTALL_STAGING = YES
 LIBDJINTEROP_LICENSE = LGPL-3.0

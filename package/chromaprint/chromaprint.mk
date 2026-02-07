@@ -1,12 +1,8 @@
-################################################################################
-#
-# CHROMAPRINT
-#
-################################################################################
-
 CHROMAPRINT_VERSION = 1.6.0
+CHROMAPRINT_SOURCE = chromaprint-$(CHROMAPRINT_VERSION).tar.gz
 CHROMAPRINT_SITE = $(call github,acoustid,chromaprint,v$(CHROMAPRINT_VERSION))
 CHROMAPRINT_INSTALL_STAGING = YES
+CHROMAPRINT_INSTALL_TARGET = YES
 CHROMAPRINT_LICENSE = LGPL2.1,MIT
 CHROMAPRINT_DEPENDENCIES = fftw-double
 

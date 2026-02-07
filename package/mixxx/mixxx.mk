@@ -1,13 +1,10 @@
-################################################################################
-#
-# MIXXX
-#
-################################################################################
-
 MIXXX_VERSION = 2.5.4
+MIXXX_SOURCE = mixxx-$(MIXXX_VERSION).tar.gz
 MIXXX_SITE = $(call github,mixxxdj,mixxx,$(MIXXX_VERSION))
+MIXXX_INSTALL_STAGING = NO
+MIXXX_INSTALL_TARGET = YES
 MIXXX_LICENSE = GPLv2
-# disable symlinks to avoid "failed to create symbolic link '.../src/test' because existing path cannot be removed: Is a directory"
+# disable symlinks to avoid "failed to create symbolic link '…/src/test' because existing path cannot be removed: Is a directory"
 MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF -DQT_QPA_PLATFORM=eglfs -DOPTIMIZE=off
 
 MIXXX_CFLAGS += -march=armv8-a
@@ -53,7 +50,7 @@ MIXXX_DEPENDENCIES = \
 	xlib_libXmu \
 	xlib_libXpm \
 	xlib_libXt \
-	xlib_libXtst
+	xlib_libXtst \
 
 ifeq ($(BR2_STATIC_DEPS),y)
 MIXXX_CONF_OPTS += -DSTATIC_LIBS=ON
@@ -72,6 +69,7 @@ else
 MIXXX_CONF_OPTS += -DFAAD=OFF
 endif
 
+
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER),y)
 MIXXX_CONF_OPTS += -DKEYFINDER=ON
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_DYNAMIC),y)
@@ -86,6 +84,7 @@ endif
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_BROADCAST),y)
 MIXXX_DEPENDENCIES += libshout
 endif
+
 
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_BULK),y)
 MIXXX_DEPENDENCIES += libusb
