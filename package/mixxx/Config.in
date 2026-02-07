@@ -1,13 +1,9 @@
 menuconfig BR2_PACKAGE_MIXXX
 	bool "mixxx"
-	help
-	    Installs Mixxx, an open-source DJ software.
-
 	depends on BR2_PACKAGE_HAS_UDEV # hidapi
 	depends on BR2_PACKAGE_QT5
 	depends on BR2_PACKAGE_QT5_JSCORE_AVAILABLE # qt5declarative
 	depends on !BR2_PACKAGE_QT5BASE_SQLITE_NONE
-
 	# packages listed as REQUIRED in CMakeLists.txt
 	depends on BR2_PACKAGE_HAS_LIBGL # libglu
 	depends on BR2_USE_MMU # libglib2
@@ -47,7 +43,6 @@ menuconfig BR2_PACKAGE_MIXXX
 	select BR2_PACKAGE_RUBBERBAND
 	select BR2_PACKAGE_TAGLIB
 	select BR2_PACKAGE_UPOWER
-
 	# qt5 x11 dependencies
 	select BR2_PACKAGE_LIBGLU if BR2_PACKAGE_QT5X11EXTRAS
 	select BR2_PACKAGE_XLIB_LIBICE if BR2_PACKAGE_QT5X11EXTRAS
@@ -57,15 +52,12 @@ menuconfig BR2_PACKAGE_MIXXX
 	select BR2_PACKAGE_XLIB_LIBXPM if BR2_PACKAGE_QT5X11EXTRAS
 	select BR2_PACKAGE_XLIB_LIBXT if BR2_PACKAGE_QT5X11EXTRAS
 	select BR2_PACKAGE_XLIB_LIBXTST if BR2_PACKAGE_QT5X11EXTRAS
-
 	# Mixxx has shipped protobuf stuff
 	select BR2_PACKAGE_PROTOBUF
 	select BR2_PACKAGE_PROTOBUF_C
-
 	# Deps for building keyfinder source
 	select BR2_PACKAGE_FFTW if BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_STATIC
 	select BR2_PACKAGE_FFTW_DOUBLE if BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_STATIC
-
 	# optional features
 	select BR2_PACKAGE_FAAD2 if BR2_PACKAGE_MIXXX_SUPPORT_DECODING_AAC
 	select BR2_PACKAGE_HIDAPI if BR2_PACKAGE_MIXXX_SUPPORT_HID
@@ -81,6 +73,8 @@ menuconfig BR2_PACKAGE_MIXXX
 	select BR2_PACKAGE_OPUSFILE if BR2_PACKAGE_MIXXX_SUPPORT_OPUS
 	select BR2_PACKAGE_QTKEYCHAIN if BR2_PACKAGE_MIXXX_SUPPORT_QTKEYCHAIN
 	select BR2_PACKAGE_WAVPACK if BR2_PACKAGE_MIXXX_SUPPORT_DECODING_WAVPACK
+	help
+	  Installs Mixxx, an open-source DJ software.
 
 if BR2_PACKAGE_MIXXX
 
@@ -94,9 +88,10 @@ config BR2_PACKAGE_MIXXX_SUPPORT_VINYLCONTROL
 
 menuconfig BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER
 	bool "KeyFinder support"
-	help
-	    Enable musical key detection through Mixxx's keyfinder library.
 	default y
+	help
+	  Enable musical key detection through Mixxx's keyfinder
+	  library.
 
 if BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER
 
@@ -104,94 +99,102 @@ choice
 	prompt "KeyFinder linking"
 	default BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_DYNAMIC
 	help
-	    Select how to link in libkeyfinder
+	  Select how to link in libkeyfinder
 
 config BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_STATIC
 	bool "Link libkeyfinder statically"
 	help
-	    Prepares Mixxx to download its own copy of libkeyfinder for building into Mixxx.
+	  Prepares Mixxx to download its own copy of libkeyfinder for
+	  building into Mixxx.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_DYNAMIC
 	bool "Link libKeyFinder dynamically"
 	help
-	    Enables build of libkeyfinder as a separate package and makes Mixxx link dynamically against it.
+	  Enables build of libkeyfinder as a separate package and makes
+	  Mixxx link dynamically against it.
 
 endchoice
 
 endif
 
-
 config BR2_PACKAGE_MIXXX_SUPPORT_FAAD
 	bool "FAAD MP4/AAC audio file decoder support"
-	help
-	    Enable support for MP4/AAC files. This will build and link Mixxx against the mp4v2 and faad2 package.
 	default y
+	help
+	  Enable support for MP4/AAC files. This will build and link
+	  Mixxx against the mp4v2 and faad2 package.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_DL_FDKAAC
 	bool "Make FDK-AAC available to Mixxx"
-	help
-	    This will enable fdk-aac to be provided in the file system for Mixxx to load dynamically.
-
-	    Make sure you confirmed licenses to be compatible with your use case before enabling this.
-	select BR2_PACKAGE_FDKAAC
 	depends on BR2_PACKAGE_FDK_AAC_ARCH_SUPPORTS
 	depends on BR2_INSTALL_LIBSTDCPP
-	default n
+	select BR2_PACKAGE_FDKAAC
+	help
+	  This will enable fdk-aac to be provided in the file system
+	  for Mixxx to load dynamically.
+
+	  Make sure you confirmed licenses to be compatible with your
+	  use case before enabling this.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_DECODING_WAVPACK
 	bool "WavPack audio file decoder support"
-	help
-	    Enable support for WavPack files. This will build and link Mixxx against the wavpack package.
 	default y
+	help
+	  Enable support for WavPack files. This will build and link
+	  Mixxx against the wavpack package.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_HID
 	bool "USB HID controller support"
-	help
-	    Enable support USB HID controllers. This will build and link Mixxx against the hidapi package.
 	default y
+	help
+	  Enable support USB HID controllers. This will build and link
+	  Mixxx against the hidapi package.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_BULK
 	bool "USB Bulk controller support"
 	default y
 	help
-	    Enable support USB bulk controllers. This will build and link Mixxx against the libusb package.
+	  Enable support USB bulk controllers. This will build and
+	  link Mixxx against the libusb package.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_FFMPEG
 	bool "FFmpeg support"
-	default n
 	help
-	    Enable support for loading audio through ffmpeg.
+	  Enable support for loading audio through ffmpeg.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_LILV
 	bool "Lilv (LV2) support"
 	default y
 	help
-	    Enable support for using LV2 plugins through lilv. This will build and link Mixxx against liblilv.
+	  Enable support for using LV2 plugins through lilv. This will
+	  build and link Mixxx against liblilv.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_MAD
 	bool "MAD MP3 Decoder"
 	default y
 	help
-	    Enable support for decoding mp3 files. This will build and link Mixxx against libmad and libid3tag.
+	  Enable support for decoding mp3 files. This will build and
+	  link Mixxx against libmad and libid3tag.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_BROADCAST
 	bool "Live Broadcasting (Shoutcast) support"
 	default y
 	help
-	    Enables broadcasting via libshout.
+	  Enables broadcasting via libshout.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_OPUS
 	bool "Opus (RFC 6716) support"
 	default y
 	help
-	    Enables support for decoding and encoding Opus audio files. This will build and link Mixxx against opus and opusfile.
+	  Enables support for decoding and encoding Opus audio files.
+	  This will build and link Mixxx against opus and opusfile.
 
 config BR2_PACKAGE_MIXXX_SUPPORT_LOCALECOMPARE
 	bool "Locale Aware Compare support for SQLite"
-	default n
 	depends on BR2_PACKAGE_SQLITE && !BR2_PACKAGE_QT5BASE_SQLITE_QT
 	help
-	    Enables Locale Aware Compare functionality for SQLite which has an effect for search queries.
+	  Enables Locale Aware Compare functionality for SQLite which
+	  has an effect for search queries.
 
 comment "Locale Aware Compare support for SQLite can only be configured if Qt is linked against system-provided sqlite"
 	depends on BR2_PACKAGE_SQLITE && BR2_PACKAGE_QT5BASE_SQLITE_QT
@@ -201,15 +204,16 @@ config BR2_PACKAGE_MIXXX_SUPPORT_MODPLUG
 	default y
 	select BR2_PACKAGE_LIBMODPLUG
 	help
-	    Enables support for module tracker files. This will build and link Mixxx against libmodplug.
-
+	  Enables support for module tracker files. This will build
+	  and link Mixxx against libmodplug.
 
 config BR2_PACKAGE_MIXXX_INSTALL_USER_UDEV_RULES
 	bool "Install user udev rule file for USB HID and Bulk controllers"
 	default y
 	depends on BR2_PACKAGE_MIXXX_SUPPORT_HID || BR2_PACKAGE_MIXXX_SUPPORT_BULK
 	help
-	    Whether to install the udev rules for USB HID and Bulk controllers
+	  Whether to install the udev rules for USB HID and Bulk
+	  controllers
 
 endif
 

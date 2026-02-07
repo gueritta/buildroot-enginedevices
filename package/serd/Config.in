@@ -1,4 +1,6 @@
 config BR2_PACKAGE_SERD
 	bool "serd"
 	help
-	    Installs serd, a lightweight C library for RDF syntax which supports reading and writing Turtle, TRiG, NTriples, and NQuads.
+	  Installs serd, a lightweight C library for RDF syntax which
+	  supports reading and writing Turtle, TRiG, NTriples, and
+	  NQuads.

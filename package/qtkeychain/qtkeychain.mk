@@ -5,7 +5,6 @@
 ################################################################################
 
 QTKEYCHAIN_VERSION = 0.15.0
-QTKEYCHAIN_SOURCE = qtkeychain-$(QTKEYCHAIN_VERSION).tar.gz
 QTKEYCHAIN_SITE = $(call github,frankosterfeld,qtkeychain,v$(QTKEYCHAIN_VERSION))
 QTKEYCHAIN_INSTALL_STAGING = YES
 QTKEYCHAIN_LICENSE = ModifiedBSD

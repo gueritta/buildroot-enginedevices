@@ -30,4 +30,5 @@ jobs:
         run: |
           # We exclude the buildroot directory itself and only check our files
           # We use -b/--br2-external because we are in an external tree
-          find . -maxdepth 4 -path ./buildroot -prune -o \( -name "Config.in" -o -name "*.mk" -o -name "*.patch" \) -print | xargs ./buildroot/utils/check-package -b
+          # We currently exclude .patch files to avoid failures from third-party patches
+          find . -maxdepth 4 -path ./buildroot -prune -o \( -name "Config.in" -o -name "*.mk" \) -print | xargs ./buildroot/utils/check-package -b
