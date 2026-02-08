@@ -9,5 +9,6 @@ SORD_SOURCE = sord-$(SORD_VERSION).tar.bz2
 SORD_SITE = https://download.drobilla.net
 SORD_INSTALL_STAGING = YES
 SORD_LICENSE = ISC
+SORD_LICENSE_FILES = COPYING
 
 $(eval $(waf-package))

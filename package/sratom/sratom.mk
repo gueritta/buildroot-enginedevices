@@ -9,5 +9,6 @@ SRATOM_SOURCE = sratom-$(SRATOM_VERSION).tar.bz2
 SRATOM_SITE = https://download.drobilla.net
 SRATOM_INSTALL_STAGING = YES
 SRATOM_LICENSE = ISC
+SRATOM_LICENSE_FILES = COPYING
 
 $(eval $(waf-package))

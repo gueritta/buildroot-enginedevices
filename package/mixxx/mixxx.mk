@@ -6,19 +6,19 @@
 
 MIXXX_VERSION = 2.5.4
 MIXXX_SITE = $(call github,mixxxdj,mixxx,$(MIXXX_VERSION))
-MIXXX_LICENSE = GPLv2
+MIXXX_LICENSE = GPL-2.0+
+MIXXX_LICENSE_FILES = LICENSE
 # disable symlinks to avoid "failed to create symbolic link '.../src/test' because existing path cannot be removed: Is a directory"
-MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF -DQT_QPA_PLATFORM=eglfs -DOPTIMIZE=off
+MIXXX_CONF_OPTS = \
+	-DUSE_SYMLINKS=OFF \
+	-DQT_QPA_PLATFORM=eglfs \
+	-DOPTIMIZE=on \
+	-DQT6=OFF \
+	-DQGLES2=ON
 
-MIXXX_CFLAGS += -march=armv8-a
-MIXXX_CXXFLAGS += -march=armv8-a
-# MIXXX_DEPENDENCIES = \
-# 	protobuf vamp-plugin-sdk rubberband soundtouch \
-# 	libid3tag taglib \
-# 	lame libogg libmad libvorbis libmp4v2 faad2 opusfile wavpack \
-# 	libshout libsndfile portmidi portaudio \
-# 	sqlite upower lilv libopenmpt-modplug \
-# 	qt5-declarative qtkeychain-qt5 qt5-svg
+# Instruction Set Tuning for Cortex-A17
+MIXXX_CFLAGS += -march=armv7-a+idiv -mfpu=neon-vfpv4 -mfloat-abi=hard -mtune=cortex-a17
+MIXXX_CXXFLAGS += -march=armv7-a+idiv -mfpu=neon-vfpv4 -mfloat-abi=hard -mtune=cortex-a17
 
 # Dependency list put together from
 # 1. https://github.com/mixxxdj/mixxx/wiki/Compiling-On-Linux#arch--derivatives
@@ -29,8 +29,11 @@ MIXXX_DEPENDENCIES = \
 	flac \
 	lame \
 	libdjinterop \
+	libdrm \
 	libebur128 \
-	libgl \
+	libegl \
+	libgbm \
+	libgles \
 	microsoft-gsl \
 	libogg \
 	libsndfile \
@@ -77,7 +80,7 @@ MIXXX_CONF_OPTS += -DKEYFINDER=ON
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER_DYNAMIC),y)
 MIXXX_DEPENDENCIES += libkeyfinder
 else
-MIXXX_DEPENDENCIES += fftw3
+MIXXX_DEPENDENCIES += fftw
 endif
 else
 MIXXX_CONF_OPTS += -DKEYFINDER=OFF
@@ -164,5 +167,14 @@ MIXXX_CONF_OPTS += -DLOCALECOMPARE=ON
 else
 MIXXX_CONF_OPTS += -DLOCALECOMPARE=OFF
 endif
+
+define MIXXX_INSTALL_LAUNCHER
+	$(INSTALL) -D -m 0755 $(MIXXX_PKGDIR)/mixxx-launcher.sh \
+		$(TARGET_DIR)/usr/bin/mixxx-launcher
+	$(INSTALL) -D -m 0644 $(MIXXX_PKGDIR)/kms.conf \
+		$(TARGET_DIR)/etc/mixxx/kms.conf
+endef
+
+MIXXX_POST_INSTALL_TARGET_HOOKS += MIXXX_INSTALL_LAUNCHER
 
 $(eval $(cmake-package))

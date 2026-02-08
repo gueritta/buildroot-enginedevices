@@ -6,5 +6,7 @@ config BR2_PACKAGE_CHROMAPRINT
 	  Installs Chromaprint, a C library for generating audio
 	  fingerprints used by AcoustID.
 
-comment "chromaprint needs fftw3 or ffmpeg for calculations"
+	  https://acoustid.org/chromaprint
+
+comment "chromaprint needs fftw or ffmpeg for calculations"
 	depends on !(BR2_PACKAGE_FFMPEG || BR2_PACKAGE_FFTW_DOUBLE)
