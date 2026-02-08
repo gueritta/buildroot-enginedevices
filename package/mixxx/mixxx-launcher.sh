@@ -19,6 +19,10 @@ export QT_QPA_EGLFS_HIDECURSOR=1
 # Rockchip specific GLES/EGL environment
 export QT_QPA_EGLFS_KMS_CONFIG=/etc/mixxx/kms.conf
 
+# Force OpenGL ES 3.2 and GLSL ES 3.20
+export MESA_GLES_VERSION_OVERRIDE=3.2
+export MESA_GLSL_VERSION_OVERRIDE=320
+
 # PulseAudio/Jack optimizations if used
 # export PULSE_LATENCY_MSEC=1
 
