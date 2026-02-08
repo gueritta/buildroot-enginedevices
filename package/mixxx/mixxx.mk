@@ -10,15 +10,20 @@ MIXXX_LICENSE = GPL-2.0+
 MIXXX_LICENSE_FILES = LICENSE
 # disable symlinks to avoid "failed to create symbolic link '.../src/test' because existing path cannot be removed: Is a directory"
 MIXXX_CONF_OPTS = \
-	-DUSE_SYMLINKS=OFF \
-	-DQT_QPA_PLATFORM=eglfs \
-	-DOPTIMIZE=on \
 	-DQT6=OFF \
-	-DQGLES2=ON
+	-DOPENGL=ES \
+	-DQGLES2=ON \
+	-DOPTIMIZE=portable \
+	-DQT_QPA_PLATFORM=eglfs \
+	-DUSE_SYMLINKS=OFF
 
-# Instruction Set Tuning for Cortex-A17
-MIXXX_CFLAGS += -march=armv7-a+idiv -mfpu=neon-vfpv4 -mfloat-abi=hard -mtune=cortex-a17
-MIXXX_CXXFLAGS += -march=armv7-a+idiv -mfpu=neon-vfpv4 -mfloat-abi=hard -mtune=cortex-a17
+# HARDWARE TUNING (The Secret Sauce)
+# -ftree-vectorize: Autovectorizes audio loops into NEON instructions
+# -funsafe-math-optimizations: Aggressive math for DSP performance
+MIXXX_HW_FLAGS = -march=armv7ve -mtune=cortex-a17 -mfpu=neon-vfpv4 -mfloat-abi=hard -O3 -ftree-vectorize -funsafe-math-optimizations
+
+MIXXX_CFLAGS += $(MIXXX_HW_FLAGS)
+MIXXX_CXXFLAGS += $(MIXXX_HW_FLAGS)
 
 # Dependency list put together from
 # 1. https://github.com/mixxxdj/mixxx/wiki/Compiling-On-Linux#arch--derivatives
