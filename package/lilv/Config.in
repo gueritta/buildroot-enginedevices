@@ -6,3 +6,5 @@ config BR2_PACKAGE_LILV
 	select BR2_PACKAGE_SRATOM
 	help
 	  Installs lilv, a host library for LV2 plugins.
+
+	  https://drobilla.net/software/lilv.html

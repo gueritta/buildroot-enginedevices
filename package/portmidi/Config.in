@@ -2,3 +2,5 @@ config BR2_PACKAGE_PORTMIDI
 	bool "portmidi"
 	help
 	  Installs portmidi, a cross-platform MIDI input/output library.
+
+	  https://github.com/PortMidi/portmidi

@@ -4,3 +4,5 @@ config BR2_PACKAGE_SRATOM
 	  Installs sratom, a small library for serialising LV2 atoms to
 	  and from RDF, for converting between binary and text or
 	  storing in a model.
+
+	  https://drobilla.net/software/sratom.html

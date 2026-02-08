@@ -11,6 +11,8 @@ config BR2_PACKAGE_QTKEYCHAIN
 	  Installs QtKeychain, a Qt API to store passwords and other
 	  secret data securely.
 
+	  https://github.com/frankosterfeld/qtkeychain
+
 comment "QtKeychain needs toolchain w/ threads"
 	depends on BR2_USE_MMU
 	depends on !BR2_TOOLCHAIN_HAS_THREADS
