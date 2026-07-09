@@ -1,0 +1,85 @@
+From daschuer PR #15874: "Avoid crash with EGLFS" (backported to 2.5.6)
+https://github.com/mixxxdj/mixxx/pull/15874
+https://github.com/mixxxdj/mixxx/issues/15863
+
+With EGLFS there is always exactly one native window and one EGL window surface.
+OpenGL windows cannot be embedded into QWidgets main window.
+This patch skips QOpenGL window creation when platformName() == "eglfs",
+forcing fallback to QWidget-based (software) waveform rendering.
+
+--- a/src/mixxxmainwindow.cpp
++++ b/src/mixxxmainwindow.cpp
+@@ -16,6 +16,8 @@
+ #endif
+ 
+ #ifdef MIXXX_USE_QOPENGL
++#include <QGuiApplication>
++
+ #include "widget/tooltipqopengl.h"
+ #include "widget/winitialglwidget.h"
+ #endif
+@@ -146,9 +148,15 @@ void MixxxMainWindow::initializeWindow() {
+ }
+ 
+ void MixxxMainWindow::initializeQOpenGL() {
++    // With EGLFS there is always exactly one native window and one EGL window surface.
++    // OpenGL windows cannot be embedded into our QWidgets main window we already have.
++    // See https://doc.qt.io/qt-6/embedded-linux.html
++    bool isEglfs = (QGuiApplication::platformName() == QStringLiteral("eglfs"));
++
+ #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+     // Qt 6 will nno longer crash if no GL is available and
+     // QGLFormat::hasOpenGL() has been removed.
+-    if (!CmdlineArgs::Instance().getSafeMode() && QGLFormat::hasOpenGL()) {
++    if (!CmdlineArgs::Instance().getSafeMode() && QGLFormat::hasOpenGL() && !isEglfs) {
+ #else
+-    if (!CmdlineArgs::Instance().getSafeMode()) {
++    if (!CmdlineArgs::Instance().getSafeMode() && !isEglfs) {
+ #endif
+
+--- a/src/waveform/waveformwidgetfactory.cpp
++++ b/src/waveform/waveformwidgetfactory.cpp
+@@ -2,6 +2,7 @@
+ 
+ #ifdef MIXXX_USE_QOPENGL
++#include <QGuiApplication>
+ #include <QOpenGLShaderProgram>
+ #include <QOpenGLWindow>
+ #else
+@@ -194,13 +195,27 @@ WaveformWidgetFactory::WaveformWidgetFactory()
+ 
+             m_openGLShaderAvailable = QOpenGLShaderProgram::hasOpenGLShaderPrograms(pContext);
+ 
++            // With EGLFS there is always exactly one native window and one EGL window surface.
++            // OpenGL windows cannot be embedded into our QWidgets main window we already have.
++            // That's why m_openGlesAvailable is not set to true on EGLFS.
++            // See https://doc.qt.io/qt-6/embedded-linux.html
++            bool isEglfs = (QGuiApplication::platformName() == QStringLiteral("eglfs"));
++
+             m_openGLVersion = pContext->isOpenGLES() ? "ES " : "";
+-            m_openGLVersion += majorVersion == 0 ? QString("None") : versionString;
++            if (isEglfs) {
++                m_openGLVersion = QStringLiteral("EGLFS ") + versionString;
++            } else {
++                m_openGLVersion += majorVersion == 0 ? QString("None") : versionString;
++            }
+ 
+             // Qt5 requires at least OpenGL 2.1 or OpenGL ES 2.0
+-            if (pContext->isOpenGLES()) {
+-                if (majorVersion * 100 + minorVersion >= 200) {
+-                    m_openGlesAvailable = true;
++            if (!isEglfs) {
++                if (pContext->isOpenGLES()) {
++                    if (majorVersion * 100 + minorVersion >= 200) {
++                        m_openGlesAvailable = true;
++                    }
++                } else {
++                    if (majorVersion * 100 + minorVersion >= 201) {
++                        m_openGlAvailable = true;
++                    }
+                 }
+-            } else {
+-                if (majorVersion * 100 + minorVersion >= 201) {
+-                    m_openGlAvailable = true;
+-                }
+             }

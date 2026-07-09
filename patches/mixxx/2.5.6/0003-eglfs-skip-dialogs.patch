@@ -1,0 +1,98 @@
+diff -ruN a/src/coreservices.cpp b/src/coreservices.cpp
+--- a/src/coreservices.cpp
++++ b/src/coreservices.cpp
+@@ -596,22 +596,9 @@
+ 
+     bool musicDirAdded = false;
+ 
++    // Skip QFileDialog on embedded EGLFS — it can't coexist with OpenGL window
+     if (m_pTrackCollectionManager->internalCollection()->loadRootDirs().isEmpty()) {
+-        // TODO(XXX) this needs to be smarter, we can't distinguish between an empty
+-        // path return value (not sure if this is normally possible, but it is
+-        // possible with the Windows 7 "Music" library, which is what
+-        // QStandardPaths::writableLocation(QStandardPaths::MusicLocation)
+-        // resolves to) and a user hitting 'cancel'. If we get a blank return
+-        // but the user didn't hit cancel, we need to know this and let the
+-        // user take some course of action -- bkgood
+-        QString fd = QFileDialog::getExistingDirectory(nullptr,
+-                tr("Choose music library directory"),
+-                QStandardPaths::writableLocation(
+-                        QStandardPaths::MusicLocation));
+-        // request to add directory to database.
+-        if (!fd.isEmpty() && m_pLibrary->requestAddDir(fd)) {
+-            musicDirAdded = true;
+-        }
++        qWarning() << "No music directories configured — skipping dialog on EGLFS";
+     }
+ 
+     emit initializationProgressUpdate(60, tr("controllers"));
+diff -ruN a/src/mixxxmainwindow.cpp b/src/mixxxmainwindow.cpp
+--- a/src/mixxxmainwindow.cpp
++++ b/src/mixxxmainwindow.cpp
+@@ -340,36 +340,13 @@
+         checkDirectRendering();
+     }
+ 
+-    // Sound hardware setup
+-    // Try to open configured devices. If that fails, display dialogs
+-    // that allow to either retry, reconfigure devices or exit.
+-    bool retryClicked;
+-    do {
+-        retryClicked = false;
+-        SoundDeviceStatus result = m_pCoreServices->getSoundManager()->setupDevices();
+-        if (result == SoundDeviceStatus::ErrorDeviceCount ||
+-                result == SoundDeviceStatus::ErrorExcessiveOutputChannel) {
+-            if (soundDeviceBusyDlg(&retryClicked) != QDialog::Accepted) {
+-                exit(0);
+-            }
+-        } else if (result != SoundDeviceStatus::Ok) {
+-            if (soundDeviceErrorMsgDlg(result, &retryClicked) !=
+-                    QDialog::Accepted) {
+-                exit(0);
+-            }
+-        }
+-    } while (retryClicked);
++    // On EGLFS (embedded Linux), skip ALL dialogs — QMessageBox crashes
++    // with "OpenGL windows cannot be mixed with others"
++    m_pCoreServices->getSoundManager()->setupDevices();
+ 
+-    // Test for at least one output device. If none, display another dialog
+-    // that says "mixxx will barely work with no outs".
+-    // In case of persisting errors, the user has already received a message
+-    // above. So we can just check the output count here.
+-    while (m_pCoreServices->getSoundManager()->getConfig().getOutputs().count() == 0) {
+-        // Exit when we press the Exit button in the noSoundDlg dialog
+-        // only call it if result != OK
+-        bool continueClicked = false;
+-        if (noOutputDlg(&continueClicked) != QDialog::Accepted) {
+-            exit(0);
+-        }
+-        if (continueClicked) {
+-            break;
+-        }
++    // If no outputs, warn but continue — no dialog on EGLFS
++    if (m_pCoreServices->getSoundManager()->getConfig().getOutputs().count() == 0) {
++        qWarning() << "No outputs configured — MIXXX will run silently";
+     }
+ 
+     // The user has either reconfigured devices or accepted no outputs,
+@@ -388,21 +365,8 @@
+     setCentralWidget(m_pCentralWidget);
+ 
+ #ifndef __APPLE__
+-    // Ask for permission to auto-hide the menu bar if applicable.
+-#ifdef __LINUX__
+-    // This makes no sense when starting in windowed mode with a global menu,
+-    // we'll ask when going fullscreen.
+-    if (!m_supportsGlobalMenuBar || isFullScreen()) {
+-        alwaysHideMenuBarDlg();
+-        slotUpdateMenuBarAltKeyConnection();
+-    }
+-#else
+-    alwaysHideMenuBarDlg();
++    // Skip menu bar dialog on embedded — EGLFS can't mix OpenGL + QWidget
+     slotUpdateMenuBarAltKeyConnection();
+-#endif
+ #endif
+ 
+     // Show the menubar after the launch image is replaced by the skin widget,

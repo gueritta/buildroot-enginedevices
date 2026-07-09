@@ -1,0 +1,9 @@
+# Auto-mount USB storage devices for MIXXX music library access
+# Triggers systemd-mount when a USB block device partition appears
+
+ACTION=="add", SUBSYSTEMS=="usb", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ENV{ID_FS_USAGE}=="filesystem", \
+  RUN{program}+="/usr/bin/systemd-mount --no-block --automount=yes --collect $devnode /media/usb-%k"
+
+ACTION=="remove", SUBSYSTEMS=="usb", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", \
+  RUN{program}+="/usr/bin/systemd-umount /media/usb-%k", \
+  RUN{program}+="/bin/rmdir /media/usb-%k"

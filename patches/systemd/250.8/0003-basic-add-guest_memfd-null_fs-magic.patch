@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Custom Build <build@denon-prime4.local>
+Date: Thu, 01 Jan 2025 00:00:00 +0000
+Subject: [PATCH] basic: add GUEST_MEMFD_MAGIC and NULL_FS_MAGIC
+
+Kernel commits added guest_memfd and null_fs filesystem magic numbers.
+Update filesystems-gperf.gperf and missing_magic.h accordingly.
+
+This fixes the following error building against newer kernel headers:
+```
+../src/basic/meson.build:234:8: ERROR: Problem encountered: Unknown filesystems defined in kernel headers:
+
+Filesystem found in kernel header but not in filesystems-gperf.gperf: GUEST_MEMFD_MAGIC
+Filesystem found in kernel header but not in filesystems-gperf.gperf: NULL_FS_MAGIC
+```
+---
+ src/basic/filesystems-gperf.gperf | 2 ++
+ src/basic/missing_magic.h         | 10 ++++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/basic/filesystems-gperf.gperf b/src/basic/filesystems-gperf.gperf
+index 1db6cc7..34afd10 100644
+--- a/src/basic/filesystems-gperf.gperf
++++ b/src/basic/filesystems-gperf.gperf
+@@ -69,6 +69,7 @@ fusectl,         {FUSE_CTL_SUPER_MAGIC}
+ # gfs is an old version of gfs2 and reuses the magic
+ gfs,             {GFS2_MAGIC}
+ gfs2,            {GFS2_MAGIC}
++guest_memfd,     {GUEST_MEMFD_MAGIC}
+ hostfs,          {HOSTFS_SUPER_MAGIC}
+ hpfs,            {HPFS_SUPER_MAGIC}
+ hugetlbfs,       {HUGETLBFS_MAGIC}
+@@ -85,6 +86,7 @@ ncpfs,           {NCP_SUPER_MAGIC}
+ nfs,             {NFS_SUPER_MAGIC}
+ nfs4,            {NFS_SUPER_MAGIC}
+ nilfs2,          {NILFS_SUPER_MAGIC}
++null_fs,         {NULL_FS_MAGIC}
+ nsfs,            {NSFS_MAGIC}
+ ntfs,            {NTFS_SB_MAGIC}
+ ntfs3,           {NTFS3_SUPER_MAGIC}
+diff --git a/src/basic/missing_magic.h b/src/basic/missing_magic.h
+index 89bc37b..7493b89 100644
+--- a/src/basic/missing_magic.h
++++ b/src/basic/missing_magic.h
+@@ -202,3 +202,13 @@
+ #ifndef BCACHEFS_SUPER_MAGIC
+ #define BCACHEFS_SUPER_MAGIC 0xca451a4e
+ #endif
++
++/* Not in systemd 252's kernel headers. Defined in linux/magic.h */
++#ifndef GUEST_MEMFD_MAGIC
++#define GUEST_MEMFD_MAGIC 0x474d454d
++#endif
++
++/* Not in systemd 252's kernel headers. Defined in linux/magic.h */
++#ifndef NULL_FS_MAGIC
++#define NULL_FS_MAGIC 0x4E554C4C
++#endif
+-- 
+2.52.0

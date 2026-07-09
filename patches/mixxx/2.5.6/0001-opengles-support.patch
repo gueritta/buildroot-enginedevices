@@ -1,0 +1,336 @@
+diff -ruN a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2026-07-08 22:42:32.719922484 +0200
++++ b/CMakeLists.txt	2026-07-08 22:47:47.983470305 +0200
+@@ -2722,6 +2722,19 @@
+ if(IOS)
+   target_link_libraries(mixxx-lib PRIVATE "-framework OpenGLES")
+   target_compile_definitions(mixxx-lib PUBLIC QT_OPENGL_ES_2)
++elseif(OPENGL STREQUAL "ES")
++  # OpenGL ES via EGL (embedded systems: Mali GPU, etc.)
++  find_library(GLESv2_LIBRARY GLESv2 REQUIRED)
++  find_library(EGL_LIBRARY EGL REQUIRED)
++  find_path(GLES2_INCLUDE_DIR GLES2/gl2.h REQUIRED)
++  find_path(EGL_INCLUDE_DIR EGL/egl.h REQUIRED)
++  add_library(OpenGLES::OpenGLES INTERFACE IMPORTED)
++  set_target_properties(OpenGLES::OpenGLES PROPERTIES
++    INTERFACE_LINK_LIBRARIES "${GLESv2_LIBRARY};${EGL_LIBRARY}"
++    INTERFACE_INCLUDE_DIRECTORIES "${GLES2_INCLUDE_DIR};${EGL_INCLUDE_DIR}"
++  )
++  target_link_libraries(mixxx-lib PRIVATE OpenGLES::OpenGLES)
++  target_compile_definitions(mixxx-lib PUBLIC QT_OPENGL_ES_2)
+ else()
+   if(APPLE)
+     # Prefer the system-provided OpenGL framework on macOS to avoid accidentally
+@@ -3255,9 +3268,11 @@
+   if(QT6)
+     find_package(X11)
+   else()
+-    find_package(X11 REQUIRED)
+-    find_package(Qt5 COMPONENTS X11Extras REQUIRED)
+-    target_link_libraries(mixxx-lib PUBLIC Qt5::X11Extras)
++    find_package(X11)
++    if(X11_FOUND)
++      find_package(Qt5 COMPONENTS X11Extras)
++      target_link_libraries(mixxx-lib PUBLIC Qt5::X11Extras)
++    endif()
+   endif()
+   if(${X11_FOUND})
+     target_include_directories(mixxx-lib SYSTEM PUBLIC "${X11_INCLUDE_DIR}")
+diff -ruN a/src/controllers/legacycontrollersettingsfactory.h b/src/controllers/legacycontrollersettingsfactory.h
+--- a/src/controllers/legacycontrollersettingsfactory.h	2026-07-08 22:42:32.727447421 +0200
++++ b/src/controllers/legacycontrollersettingsfactory.h	2026-07-08 22:47:47.983719121 +0200
+@@ -1,5 +1,8 @@
+ #pragma once
+ 
++#include <functional>
++#include <memory>
++
+ #include <QDomElement>
+ 
+ #include "controllers/legacycontrollersettingsfactory.h"
+@@ -55,7 +58,11 @@
+   private:
+     struct SupportedSetting {
+         std::function<bool(const QDomElement&)> matcher;
+-        std::function<std::shared_ptr<AbstractLegacyControllerSetting>(const QDomElement&)> builder;
++        std::function<std::shared_ptr<AbstractLegacyControllerSetting>(
++                const QDomElement&)> builder;
++        SupportedSetting(decltype(matcher) m, decltype(builder) b)
++            : matcher(std::move(m)), builder(std::move(b)) {
++        }
+     };
+ 
+     LegacyControllerSettingBuilder();
+diff -ruN a/src/coreservices.cpp b/src/coreservices.cpp
+--- a/src/coreservices.cpp	2026-07-08 22:42:32.722493446 +0200
++++ b/src/coreservices.cpp	2026-07-08 22:55:14.799819519 +0200
+@@ -47,6 +47,7 @@
+ #include "util/sandbox.h"
+ #endif
+ 
++#if __has_include(<X11/XKBlib.h>)
+ #ifdef Q_OS_LINUX
+ #include <X11/XKBlib.h>
+ #endif
+@@ -61,6 +62,7 @@
+ #undef max
+ #undef min
+ #endif
++#endif // __has_include(<X11/XKBlib.h>)
+ 
+ namespace {
+ const mixxx::Logger kLogger("CoreServices");
+@@ -82,6 +84,7 @@
+ 
+ // hack around https://gitlab.freedesktop.org/xorg/lib/libx11/issues/25
+ // https://github.com/mixxxdj/mixxx/issues/9533
++#if __has_include(<X11/Xlib.h>)
+ #if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+ typedef Bool (*WireToErrorType)(Display*, XErrorEvent*, xError*);
+ 
+@@ -101,6 +104,7 @@
+ }
+ 
+ #endif
++#endif // __has_include(<X11/Xlib.h>)
+ 
+ #if defined(Q_OS_LINUX)
+ QLocale localeFromXkbSymbol(const QString& xkbLayout) {
+@@ -201,6 +205,7 @@
+     return desktop.contains("xfce");
+ }
+ 
++#if __has_include(<X11/XKBlib.h>)
+ QString getCurrentXkbLayoutName() {
+     XkbIgnoreExtension(False);
+     Display* pDisplay = XkbOpenDisplay(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+@@ -242,6 +247,7 @@
+     XCloseDisplay(pDisplay);
+     return layoutName;
+ }
++#endif // __has_include(<X11/XKBlib.h>)
+ #endif
+ 
+ // Returns the locale of the current keyboard layout
+@@ -253,11 +259,13 @@
+ // https://bugreports.qt.io/browse/QTBUG-137302
+ inline QLocale inputLocale() {
+ #if defined(Q_OS_LINUX)
++#if __has_include(<X11/XKBlib.h>)
+     QString layoutName = getCurrentXkbLayoutName();
+     if (!layoutName.isEmpty()) {
+         qDebug() << "Keyboard Layout from XKB:" << layoutName;
+         return localeFromXkbName(layoutName);
+     }
++#endif // __has_include(<X11/XKBlib.h>)
+     if (isGnomeSession()) {
+         // In a Gnome session QGuiApplication::inputMethod() is not necessarily correct
+         // https://github.com/mixxxdj/mixxx/issues/14838
+@@ -449,6 +457,7 @@
+ 
+     VersionStore::logBuildDetails();
+ 
++#if __has_include(<X11/Xlib.h>)
+ #if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+     // XESetWireToError will segfault if running as a Wayland client
+     if (pApp->platformName() == QLatin1String("xcb")) {
+@@ -456,6 +465,7 @@
+             XESetWireToError(QX11Info::display(), i, &__xErrorHandler);
+         }
+     }
++#endif
+ #else
+     Q_UNUSED(pApp);
+ #endif
+diff -ruN a/src/library/basesqltablemodel.cpp b/src/library/basesqltablemodel.cpp
+--- a/src/library/basesqltablemodel.cpp	2026-07-08 22:57:02.609931689 +0200
++++ b/src/library/basesqltablemodel.cpp	2026-07-08 22:58:27.491307515 +0200
+@@ -871,7 +871,7 @@
+     TrackId2Rows trackIdToRows;
+     TrackPos2Row trackPosToRows; // remains empty
+ 
+-    QMutableListIterator<RowInfo> it(rowInfos);
++    QMutableVectorIterator<RowInfo> it(rowInfos);
+     while (it.hasNext()) {
+         const RowInfo& rowInfo = it.next();
+         if (trackIdsToRemove.contains(rowInfo.trackId)) {
+diff -ruN a/src/library/browse/browsetablemodel.cpp b/src/library/browse/browsetablemodel.cpp
+--- a/src/library/browse/browsetablemodel.cpp	2026-07-08 22:57:02.614990073 +0200
++++ b/src/library/browse/browsetablemodel.cpp	2026-07-08 22:57:07.893530985 +0200
+@@ -210,7 +210,7 @@
+         m_currentDirectory = path.info().location();
+         m_pBrowseThread->executePopulation(std::move(path), this);
+     } else {
+-        m_currentDirectory = {};
++        m_currentDirectory.clear();
+         m_pBrowseThread->executePopulation({}, this);
+     }
+ }
+diff -ruN a/src/track/replaygain.h b/src/track/replaygain.h
+--- a/src/track/replaygain.h	2026-07-08 23:00:53.513002980 +0200
++++ b/src/track/replaygain.h	2026-07-08 23:00:53.515085623 +0200
+@@ -1,4 +1,5 @@
+ #pragma once
++#include <optional>
+ #include <QtDebug>
+ 
+ #include "util/types.h"
+diff -ruN a/src/util/screensaver.cpp b/src/util/screensaver.cpp
+--- a/src/util/screensaver.cpp	2026-07-08 22:42:32.724703787 +0200
++++ b/src/util/screensaver.cpp	2026-07-08 22:47:47.983683987 +0200
+@@ -36,7 +36,7 @@
+ #  include <X11/extensions/scrnsaver.h>
+ #endif
+ 
+-#if defined(__LINUX__) || (defined(HAVE_XSCREENSAVER_SUSPEND) && HAVE_XSCREENSAVER_SUSPEND)
++#if defined(HAVE_XSCREENSAVER_SUSPEND) && HAVE_XSCREENSAVER_SUSPEND
+ #  define None XNone
+ #  define Window XWindow
+ #  include <X11/Xlib.h>
+@@ -173,6 +173,7 @@
+ 
+ void ScreenSaverHelper::triggerUserActivity()
+ {
++#if defined(HAVE_XSCREENSAVER_SUSPEND) && HAVE_XSCREENSAVER_SUSPEND
+     const char* name = ":0.0";
+     Display *display;
+     if (getenv("DISPLAY")) {
+@@ -183,6 +184,7 @@
+         XResetScreenSaver(display);
+         XCloseDisplay(display);
+     }
++#endif
+     return;
+ }
+ // Disabling the method with DBus since it seems to be failing on several systems.
+diff -ruN a/src/waveform/renderers/allshader/waveformrenderertextured.cpp b/src/waveform/renderers/allshader/waveformrenderertextured.cpp
+--- a/src/waveform/renderers/allshader/waveformrenderertextured.cpp	2026-07-08 23:12:46.173779165 +0200
++++ b/src/waveform/renderers/allshader/waveformrenderertextured.cpp	2026-07-08 23:15:27.160561002 +0200
+@@ -156,7 +156,7 @@
+     if (m_unitQuadListId != -1) {
+         return;
+     }
+-
++#ifndef QT_OPENGL_ES_2
+     glMatrixMode(GL_PROJECTION);
+     glLoadIdentity();
+     glOrtho(-1.0, 1.0, -1.0, 1.0, -10.0, 10.0);
+@@ -183,6 +183,10 @@
+         glEnd();
+     }
+     glEndList();
++#else
++    // GLES2: display lists not supported, mark as created
++    m_unitQuadListId = 0;
++#endif
+ }
+ 
+ void WaveformRendererTextured::createFrameBuffers() {
+@@ -320,6 +324,7 @@
+ 
+     // paint into frame buffer
+     {
++#ifndef QT_OPENGL_ES_2
+         glMatrixMode(GL_PROJECTION);
+         glPushMatrix();
+         glLoadIdentity();
+@@ -442,8 +447,10 @@
+         glPopMatrix();
+         glMatrixMode(GL_PROJECTION);
+         glPopMatrix();
++#endif // !QT_OPENGL_ES_2
+     }
+ 
++#ifndef QT_OPENGL_ES_2
+     glMatrixMode(GL_PROJECTION);
+     glPushMatrix();
+     glLoadIdentity();
+@@ -454,6 +461,7 @@
+     glLoadIdentity();
+ 
+     glTranslatef(0.0, 0.0, 0.0);
++#endif
+ 
+     glEnable(GL_BLEND);
+     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+@@ -475,6 +483,7 @@
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+ 
++#ifndef QT_OPENGL_ES_2
+         glBegin(GL_QUADS);
+         {
+             glTexCoord2f(0.0, 0.0);
+@@ -490,6 +499,7 @@
+             glVertex3f(-1.0f, 1.0f, 0.0f);
+         }
+         glEnd();
++#endif // !QT_OPENGL_ES_2
+     }
+ 
+     glDisable(GL_TEXTURE_2D);
+@@ -507,9 +517,11 @@
+     glEnd();
+     */
+ 
++#ifndef QT_OPENGL_ES_2
+     glPopMatrix();
+     glMatrixMode(GL_PROJECTION);
+     glPopMatrix();
++#endif
+ }
+ 
+ } // namespace allshader
+diff -ruN a/src/waveform/waveformwidgetfactory.cpp b/src/waveform/waveformwidgetfactory.cpp
+--- a/src/waveform/waveformwidgetfactory.cpp	2026-07-08 23:03:46.291193876 +0200
++++ b/src/waveform/waveformwidgetfactory.cpp	2026-07-08 23:03:46.296108722 +0200
+@@ -174,9 +174,11 @@
+                     "renderer \"%3\"")
+                                           .arg(versionString, vendorString, rendererString);
+ 
+-            GLint majorVersion, minorVersion = GL_INVALID_ENUM;
++            GLint majorVersion = GL_INVALID_ENUM, minorVersion = GL_INVALID_ENUM;
++            #ifndef QT_OPENGL_ES_2
+             glFunctions->glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
+-            glFunctions->glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
++                        glFunctions->glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
++#endif
+             if (majorVersion == GL_INVALID_ENUM || minorVersion == GL_INVALID_ENUM) {
+                 // GL_MAJOR/MINOR_VERSION are not supported below OpenGL 3.0, so
+                 // parse GL_VERSION string as a fallback.
+diff -ruN a/src/widget/wcoverartlabel.cpp b/src/widget/wcoverartlabel.cpp
+--- a/src/widget/wcoverartlabel.cpp	2026-07-08 23:05:30.778188017 +0200
++++ b/src/widget/wcoverartlabel.cpp	2026-07-08 23:05:39.702047067 +0200
+@@ -70,7 +70,7 @@
+         m_fullSizeCover = px;
+         setPixmap(m_loadedCover);
+     }
+-#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
++#if 0 // Qt 5.15 pixmap() still returns pointer
+     QSize newSize = pixmap().size() / devicePixelRatioF();
+ #else
+     QSize newSize = pixmap()->size() / devicePixelRatioF();
+@@ -92,7 +92,7 @@
+     // Skip resizing the pixmap and label if the pixmap already fits.
+     // Check if we got more space in one dimension and don't need it
+     // for the other.
+-    const QSize pixmapSize = pixmap().size() / devicePixelRatioF();
++    const QSize pixmapSize = pixmap()->size() / devicePixelRatioF();
+     if (m_pixmapSizeMax == pixmapSize ||
+             (m_pixmapSizeMax.height() == pixmapSize.height() &&
+                     m_pixmapSizeMax.width() > pixmapSize.width()) ||
+diff -ruN a/src/widget/wspinnyglsl.cpp b/src/widget/wspinnyglsl.cpp
+--- a/src/widget/wspinnyglsl.cpp	2026-07-08 23:12:46.173528278 +0200
++++ b/src/widget/wspinnyglsl.cpp	2026-07-08 23:12:46.173579834 +0200
+@@ -80,7 +80,11 @@
+                 0,
+                 m_iVinylScopeSize,
+                 m_iVinylScopeSize,
++#ifdef QT_OPENGL_ES_2
++                GL_LUMINANCE,
++#else
+                 GL_RED,
++#endif
+                 GL_UNSIGNED_BYTE,
+                 data);
+         m_qTexture.release();

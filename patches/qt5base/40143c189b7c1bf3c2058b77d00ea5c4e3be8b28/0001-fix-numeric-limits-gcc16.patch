@@ -1,0 +1,19 @@
+--- a/src/corelib/global/qfloat16.h
++++ b/src/corelib/global/qfloat16.h
+@@ -41,6 +41,7 @@
+ 
+ #include <QtCore/qglobal.h>
+ #include <QtCore/qmetatype.h>
++#include <limits>
+ #include <string.h>
+ 
+ #if defined(QT_COMPILER_SUPPORTS_F16C) && defined(__AVX2__) && !defined(__F16C__)
+--- a/src/corelib/global/qendian.h
++++ b/src/corelib/global/qendian.h
+@@ -41,6 +41,7 @@
+ 
+ #include <QtCore/qfloat16.h>
+ #include <QtCore/qglobal.h>
++#include <limits>
+ 
+ // include stdlib.h and hope that it defines __GLIBC__ for glibc-based systems

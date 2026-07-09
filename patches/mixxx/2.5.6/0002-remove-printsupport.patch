@@ -1,0 +1,11 @@
+diff -ruN a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2811,7 +2811,6 @@
+     Gui
+     Network
+     OpenGL
+-    PrintSupport
+     Qml # for QJSEngine
+     Sql
+     Svg

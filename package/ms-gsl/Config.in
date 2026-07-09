@@ -1,0 +1,7 @@
+config BR2_PACKAGE_MS_GSL
+	bool "ms-gsl"
+	help
+	  Microsoft Guidelines Support Library (GSL): functions and types
+	  that are suggested for use by the C++ Core Guidelines.
+
+	  https://github.com/microsoft/GSL

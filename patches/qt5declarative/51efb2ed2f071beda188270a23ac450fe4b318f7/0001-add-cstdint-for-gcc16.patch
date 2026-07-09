@@ -1,0 +1,10 @@
+--- a/src/qml/compiler/qv4compiler.cpp
++++ b/src/qml/compiler/qv4compiler.cpp
+@@ -38,6 +38,7 @@
+ ****************************************************************************/
+ 
+ #include <qv4compiler_p.h>
++#include <cstdint>
+ #include <qv4codegen_p.h>
+ #include <private/qv4compileddata_p.h>
+ #include <private/qv4staticvalue_p.h>

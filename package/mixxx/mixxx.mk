@@ -1,4 +1,4 @@
-MIXXX_VERSION = 2.3.2
+MIXXX_VERSION = 2.5.6
 MIXXX_SOURCE = mixxx-$(MIXXX_VERSION).tar.gz
 MIXXX_SITE = https://github.com/mixxxdj/mixxx/archive/refs/tags/$(MIXXX_VERSION).tar.gz
 MIXXX_SITE = $(call github,mixxxdj,mixxx,$(MIXXX_VERSION))
@@ -6,7 +6,35 @@ MIXXX_INSTALL_STAGING = NO
 MIXXX_INSTALL_TARGET = YES
 MIXXX_LICENSE = GPLv2
 # disable symlinks to avoid "failed to create symbolic link '…/src/test' because existing path cannot be removed: Is a directory"
-MIXXX_CONF_OPTS = -DUSE_SYMLINKS=OFF
+MIXXX_CONF_OPTS = \
+    -DUSE_SYMLINKS=OFF \
+    -DQT6=OFF \
+    -DOPTIMIZE=native \
+    -DQT_QPA_PLATFORM=eglfs \
+    -DBUILD_BENCH=OFF \
+    -DCMAKE_DISABLE_FIND_PACKAGE_X11=ON \
+    -DENGINEPRIME=OFF
+
+# ARMv7ve NEON DSP Optimization
+MIXXX_HW_FLAGS = \
+    -march=armv7ve \
+    -mtune=cortex-a17 \
+    -mfpu=neon-vfpv4 \
+    -mfloat-abi=hard \
+    -O3 \
+    -ftree-vectorize \
+    -funsafe-math-optimizations
+
+# Inject HW flags into target C/CXX flags
+MIXXX_CONF_OPTS += \
+    -DCMAKE_C_FLAGS="$(TARGET_CFLAGS) $(MIXXX_HW_FLAGS)" \
+    -DCMAKE_CXX_FLAGS="$(TARGET_CXXFLAGS) $(MIXXX_HW_FLAGS)"
+
+ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
+MIXXX_CONF_OPTS += -DOPENGL=DESKTOP
+else ifeq ($(BR2_PACKAGE_HAS_LIBGLES),y)
+MIXXX_CONF_OPTS += -DOPENGL=ES -DQGLES2=ON -DQGLES3=ON
+endif
 # MIXXX_DEPENDENCIES = \
 # 	protobuf vamp-plugin-sdk rubberband soundtouch \
 # 	libid3tag taglib \
@@ -23,7 +51,6 @@ MIXXX_DEPENDENCIES = \
 	chromaprint \
 	hidapi \
 	lame \
-	libgl \
 	libogg \
 	libsndfile \
 	libusb \
@@ -35,17 +62,20 @@ MIXXX_DEPENDENCIES = \
 	rubberband \
 	taglib \
 	upower \
+	libebur128 \
 	qt5base \
 	qt5declarative \
 	qt5script \
-	qt5x11extras \
-	xlib_libICE \
-	xlib_libSM \
-	xlib_libXaw \
-	xlib_libXmu \
-	xlib_libXpm \
-	xlib_libXt \
-	xlib_libXtst \
+	libsoundtouch \
+	ms-gsl \
+	sqlite \
+	gtest
+
+ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
+MIXXX_DEPENDENCIES += libgl
+else ifeq ($(BR2_PACKAGE_HAS_LIBGLES),y)
+MIXXX_DEPENDENCIES += libgles
+endif
 
 ifeq ($(BR2_STATIC_DEPS),y)
 MIXXX_CONF_OPTS += -DSTATIC_LIBS=ON
@@ -62,10 +92,6 @@ MIXXX_DEPENDENCIES += faad2 mp4v2
 MIXXX_CONF_OPTS += -DFAAD=ON
 else
 MIXXX_CONF_OPTS += -DFAAD=OFF
-endif
-
-ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_LIBEBUR128_DYNAMIC),y)
-MIXXX_DEPENDENCIES += libebur128
 endif
 
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_KEYFINDER),y)
@@ -85,10 +111,6 @@ endif
 
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_BROADCAST),y)
 MIXXX_DEPENDENCIES += libshout
-endif
-
-ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_LIBSOUNDTOUCH_DYNAMIC),y)
-MIXXX_DEPENDENCIES += libsoundtouch
 endif
 
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_BULK),y)
@@ -138,10 +160,6 @@ MIXXX_DEPENDENCIES += qtkeychain
 MIXXX_CONF_OPTS += -DQTKEYCHAIN=ON
 else
 MIXXX_CONF_OPTS += -DQTKEYCHAIN=OFF
-endif
-
-ifeq ($(BR2_PACKAGE_QT5BASE_SQLITE_SYSTEM),y)
-MIXXX_DEPENDENCIES += sqlite
 endif
 
 ifeq ($(BR2_PACKAGE_MIXXX_SUPPORT_WAVPACK),y)

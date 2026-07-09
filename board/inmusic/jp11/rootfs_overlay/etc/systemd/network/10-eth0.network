@@ -1,0 +1,13 @@
+[Match]
+Name=eth0
+
+[Network]
+DHCP=yes
+
+[DHCP]
+# Retry DHCP forever on cable unplug/replug
+ClientIdentifier=mac
+
+[Link]
+# Auto-negotiate, retry on failure
+ActivationPolicy=always-up
