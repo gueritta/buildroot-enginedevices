@@ -43,7 +43,6 @@ export QT_QPA_FONTDIR=/usr/share/fonts
 export QT_QPA_GENERIC_PLUGINS=evdevtouch:evdevmouse:evdevkeyboard
 export QT_QPA_PLATFORM=eglfs
 export QT_QPA_EGLFS_INTEGRATION=eglfs_mali
-export QT_QPA_EGLFS_KMS_ATOMIC=1
 export QT_QPA_EGLFS_ROTATION=90
 export QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS="/dev/input/event0:rotate=90"
 export QT_LOGGING_RULES="qt.qpa.evdevtouch=true;qt.qpa.input=true"
