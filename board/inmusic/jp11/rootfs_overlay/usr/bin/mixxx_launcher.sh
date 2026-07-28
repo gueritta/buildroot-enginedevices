@@ -4,7 +4,7 @@
 # Bind-mounts USB vfat to trusted ext4 path to bypass MIXXX sandbox.
 # Restores seed DB if current DB is missing/corrupted.
 
-MIXDIR="/media/az01-internal/mixxx"
+MIXDIR="/media/TKGL_BOOTSTRAP/tkgl_bootstrap_DenonPrimeGO/mixxx-bundle"
 BUNDLE="$MIXDIR"
 SETTINGS="$MIXDIR/settings"
 
@@ -59,7 +59,7 @@ systemctl stop engine 2>/dev/null || true
 sleep 0.5
 
 # ── CPU shielding: pin MIXXX to cores 2-3 with real-time FIFO priority 99 ──
-exec taskset -c 2,3 chrt -f 99 "$BUNDLE/bin/mixxx" -platform eglfs \
+exec taskset -c 2,3 "$BUNDLE/bin/mixxx" -platform eglfs \
     --settingsPath "$SETTINGS" \
-    --resourcePath "$BUNDLE/bin" \
+    --resourcePath "$BUNDLE" \
     "$@"
