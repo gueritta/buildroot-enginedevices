@@ -9,7 +9,7 @@ BOARD_DIR="$(dirname "$0")"
 # It has Conflicts=engine.service and Before=engine.service,
 # so enabling it would prevent Engine DJ from starting on boot.
 # Users who want MIXXX should either:
-#   1. Use the SD card deployment (scripts/deploy-to-device.sh) for switchable dual-boot
+#   1. Use the SD card deployment (scripts/dev-deploy-to-device.sh) for switchable dual-boot
 #   2. Manually enable: systemctl enable mixxx.service
 
 # Make launcher executable
